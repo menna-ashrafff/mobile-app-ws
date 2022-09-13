@@ -3,6 +3,7 @@ package com.appsdeveloperblog.app.ws.service.impl;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -19,6 +20,7 @@ import com.appsdeveloperblog.app.ws.io.entity.UserEntity;
 import com.appsdeveloperblog.app.ws.io.repositories.UserRepository;
 import com.appsdeveloperblog.app.ws.service.UserService;
 import com.appsdeveloperblog.app.ws.shared.Utils;
+import com.appsdeveloperblog.app.ws.shared.dto.AddressDTO;
 import com.appsdeveloperblog.app.ws.shared.dto.UserDto;
 import com.appsdeveloperblog.app.ws.ui.model.response.ErrorMessages;
 
@@ -40,9 +42,22 @@ public class UserServiceImpl implements UserService {
 		//checking if the user is unique
 		
 		if(userRepository.findByEmail(user.getEmail()) != null) throw new RuntimeException("user already exists") ;
+		
+		//
+		for(int i=0;i<user.getAddresses().size();i++)
+		{
+			AddressDTO address = user.getAddresses().get(i);
+			address.setUserDetails(user);
+			address.setAddressId(utils.generateAddressid(30));
+			user.getAddresses().set(i, address);
+		}
+		  
+		
 		//copy user dto to userentity
-		UserEntity userEntity = new UserEntity();
-		BeanUtils.copyProperties(user, userEntity);
+
+		ModelMapper modelMapper = new ModelMapper();
+		UserEntity userEntity = modelMapper.map(user, UserEntity.class);
+
 		
 		// encrypt user password by using encode method in bcryptpasswordEncoder
 		
@@ -50,14 +65,15 @@ public class UserServiceImpl implements UserService {
 		// generating public secure userid 
 		String publicUserid = utils.generateUserid(30);
 		userEntity.setUserId(publicUserid);
+
 		
 		//use userrepository to save user into the database
 		userRepository.save(userEntity);
 		
 		// return dto to be converted to userest as a response to user
 		
-		UserDto returnValue = new UserDto();
-		BeanUtils.copyProperties(userEntity, returnValue);
+		UserDto returnValue = modelMapper.map(userEntity, UserDto.class);
+	
 		
 		return returnValue;
 	}
