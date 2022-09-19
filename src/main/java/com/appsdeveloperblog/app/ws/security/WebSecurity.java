@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import com.appsdeveloperblog.app.ws.io.repositories.UserRepository;
 import com.appsdeveloperblog.app.ws.service.UserService;
 
 @SuppressWarnings("deprecation")
@@ -15,10 +16,13 @@ import com.appsdeveloperblog.app.ws.service.UserService;
 public class WebSecurity extends WebSecurityConfigurerAdapter{
 	private final UserService userDetailsService;
 	private final BCryptPasswordEncoder bCryptPasswordEncoder;
-	
-	public WebSecurity(UserService userDetailsService, BCryptPasswordEncoder bCryptPasswordEncoder) {
+	private final UserRepository userRepository;
+	public WebSecurity(UserService userDetailsService, BCryptPasswordEncoder bCryptPasswordEncoder, UserRepository userRepository) {
 	this.userDetailsService = userDetailsService;
-	this.bCryptPasswordEncoder = bCryptPasswordEncoder;}
+	this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+	this.userRepository=userRepository;
+	
+	}
 	
 	@Override
 	protected void configure(HttpSecurity http) throws Exception{
@@ -27,9 +31,10 @@ public class WebSecurity extends WebSecurityConfigurerAdapter{
 		.permitAll()
 		.antMatchers(SecurityConstants.H2_CONSOLE)
 		.permitAll()
+		.antMatchers(HttpMethod.DELETE,"/users/**").hasRole("ADMIN")
 		.anyRequest().authenticated().and()
 		.addFilter(getAuthenticationFilter())
-		.addFilter(new AuthorizationFilter(authenticationManager()))
+		.addFilter(new AuthorizationFilter(authenticationManager(),userRepository))
 		.sessionManagement() .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 		
 		//support h2 database disabling frame options for security reasons ?

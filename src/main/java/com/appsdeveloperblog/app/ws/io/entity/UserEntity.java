@@ -3,15 +3,20 @@ package com.appsdeveloperblog.app.ws.io.entity;
 
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.List;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.JoinColumn;
 
 
 @Entity
@@ -44,6 +49,13 @@ public class UserEntity implements Serializable {
 	
 	@OneToMany(mappedBy="userDetails", cascade=CascadeType.ALL)
 	private List<AddressEntity> addresses;
+	
+	@ManyToMany(cascade= {CascadeType.PERSIST},fetch = FetchType.EAGER)
+	@JoinTable(name="users_roles",
+			joinColumns=@JoinColumn(name="users_id",referencedColumnName="id"),
+			inverseJoinColumns=@JoinColumn(name="role_id",referencedColumnName="id")
+			)
+	private Collection<RoleEntity> roles;
 
 	public List<AddressEntity> getAddresses() {
 		return addresses;
@@ -112,10 +124,20 @@ public class UserEntity implements Serializable {
 	public Boolean getEmailVerficationStatus() {
 		return emailVerficationStatus;
 	}
-
+	
 	public void setEmailVerficationStatus(Boolean emailVerficationStatus) {
 		this.emailVerficationStatus = emailVerficationStatus;
 	}
+
+	public Collection<RoleEntity> getRoles() {
+		return roles;
+	}
+
+	public void setRoles(Collection<RoleEntity> roles) {
+		this.roles = roles;
+	}
+
+	
 
 
 	
